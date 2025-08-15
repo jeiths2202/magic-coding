@@ -3,12 +3,65 @@
 class ScratchEducationApp {
   constructor() {
     this.currentUser = null;
+    this.currentLanguage = 'ko';
+    this.currentTheme = 'light';
+    this.translations = {};
+    this.supportedLanguages = [];
     this.init();
   }
 
-  init() {
+  async init() {
+    await this.loadSettings();
+    await this.loadTranslations();
+    this.applyTheme();
     this.loadUserData();
     this.setupEventListeners();
+    this.updateUI();
+  }
+
+  async loadSettings() {
+    try {
+      // 로컬 스토리지에서 설정 로드
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        this.currentLanguage = settings.language || 'ko';
+        this.currentTheme = settings.theme || 'light';
+      }
+    } catch (error) {
+      console.error('설정 로드 실패:', error);
+    }
+  }
+
+  async loadTranslations() {
+    try {
+      const response = await fetch(`/api/translations/${this.currentLanguage}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        this.translations = data.translation;
+        this.supportedLanguages = data.supportedLanguages;
+      }
+    } catch (error) {
+      console.error('번역 데이터 로드 실패:', error);
+    }
+  }
+
+  applyTheme() {
+    const html = document.documentElement;
+    if (this.currentTheme === 'dark') {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+  }
+
+  saveSettings() {
+    const settings = {
+      language: this.currentLanguage,
+      theme: this.currentTheme
+    };
+    localStorage.setItem('appSettings', JSON.stringify(settings));
   }
 
   loadUserData() {
@@ -26,12 +79,137 @@ class ScratchEducationApp {
         this.startLearning(gradeId);
       } else if (e.target.dataset.action === 'free-trial') {
         this.startFreeTrial();
+      } else if (e.target.dataset.action === 'open-settings') {
+        this.showSettingsModal();
       }
     });
   }
 
+  updateUI() {
+    // 다국어 텍스트 업데이트
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const key = element.dataset.i18n;
+      if (this.translations[key]) {
+        element.textContent = this.translations[key];
+      }
+    });
+
+    // 특별한 경우 (타이틀에 이모지 포함)
+    const titleElement = document.getElementById('main-title');
+    if (titleElement && this.translations.title) {
+      titleElement.textContent = this.translations.title;
+    }
+
+    const subtitleElement = document.getElementById('main-subtitle');
+    if (subtitleElement && this.translations.subtitle) {
+      subtitleElement.textContent = this.translations.subtitle;
+    }
+  }
+
+  async changeLanguage(newLanguage) {
+    if (newLanguage !== this.currentLanguage) {
+      this.currentLanguage = newLanguage;
+      await this.loadTranslations();
+      this.updateUI();
+      this.saveSettings();
+    }
+  }
+
+  changeTheme(newTheme) {
+    if (newTheme !== this.currentTheme) {
+      this.currentTheme = newTheme;
+      this.applyTheme();
+      this.saveSettings();
+    }
+  }
+
+  showSettingsModal() {
+    const modal = this.createModal('settings-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    modalContent.innerHTML = `
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+          <i class="fas fa-cog mr-2"></i>
+          ${this.translations.settings || '설정'}
+        </h2>
+      </div>
+      
+      <div class="space-y-6">
+        <!-- 언어 설정 -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+            <i class="fas fa-globe mr-2"></i>
+            ${this.translations.language || '언어'}
+          </h3>
+          <div class="space-y-2">
+            ${this.supportedLanguages.map(lang => `
+              <div class="language-option ${lang.code === this.currentLanguage ? 'active' : ''}" 
+                   data-language="${lang.code}">
+                <span class="language-flag">${lang.flag}</span>
+                <span class="text-gray-800 dark:text-white">${lang.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- 테마 설정 -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+            <i class="fas fa-palette mr-2"></i>
+            ${this.translations.theme || '테마'}
+          </h3>
+          <div class="space-y-2">
+            <div class="theme-option ${this.currentTheme === 'light' ? 'active' : ''}" data-theme="light">
+              <span class="theme-icon">☀️</span>
+              <span class="text-gray-800 dark:text-white">${this.translations.lightMode || '라이트 모드'}</span>
+            </div>
+            <div class="theme-option ${this.currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">
+              <span class="theme-icon">🌙</span>
+              <span class="text-gray-800 dark:text-white">${this.translations.darkMode || '다크 모드'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 text-center">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors" 
+                onclick="scratchApp.closeModal(document.querySelector('.settings-modal'))">
+          ${this.translations.close || '닫기'}
+        </button>
+      </div>
+    `;
+
+    // 언어 선택 이벤트
+    modal.querySelectorAll('.language-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const language = option.dataset.language;
+        this.changeLanguage(language);
+        
+        // 활성 상태 업데이트
+        modal.querySelectorAll('.language-option').forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+      });
+    });
+
+    // 테마 선택 이벤트
+    modal.querySelectorAll('.theme-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const theme = option.dataset.theme;
+        this.changeTheme(theme);
+        
+        // 활성 상태 업데이트
+        modal.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+      });
+    });
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+  }
+
   async startLearning(gradeId) {
-    this.showNotification('학습을 시작합니다...', 'info');
+    this.showNotification(this.translations.loadingUnits || '학습을 시작합니다...', 'info');
     
     try {
       const response = await fetch(`/api/grades/${gradeId}/units`);
@@ -42,7 +220,7 @@ class ScratchEducationApp {
       }
     } catch (error) {
       console.error('단원 로드 실패:', error);
-      this.showNotification('단원 정보를 불러오는데 실패했습니다.', 'error');
+      this.showNotification(this.translations.error || '오류가 발생했습니다', 'error');
     }
   }
 
@@ -60,21 +238,21 @@ class ScratchEducationApp {
     
     modalContent.innerHTML = `
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">📚 학습 단원</h2>
-        <p class="text-gray-600">원하는 단원을 선택해서 학습을 시작하세요</p>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">${this.translations.units || '📚 학습 단원'}</h2>
+        <p class="text-gray-600 dark:text-gray-300">${this.translations.selectUnit || '원하는 단원을 선택해서 학습을 시작하세요'}</p>
       </div>
       
       <div class="space-y-4">
         ${units.map(unit => `
-          <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer unit-card" data-unit-id="${unit.id}">
+          <div class="border dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer unit-card" data-unit-id="${unit.id}">
             <div class="flex justify-between items-start mb-2">
-              <h3 class="font-semibold text-gray-800">${unit.name}</h3>
-              ${unit.isPremium ? '<span class="premium-badge">프리미엄</span>' : '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">무료</span>'}
+              <h3 class="font-semibold text-gray-800 dark:text-white">${unit.name}</h3>
+              ${unit.isPremium ? `<span class="premium-badge">${this.translations.premium || '프리미엄'}</span>` : `<span class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded text-xs">${this.translations.free || '무료'}</span>`}
             </div>
-            <p class="text-gray-600 text-sm mb-2">${unit.description}</p>
-            <div class="flex justify-between items-center text-xs text-gray-500">
-              <span>⏱️ 예상 시간: ${unit.estimatedHours}시간</span>
-              <span>📊 순서: ${unit.order}번째</span>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">${unit.description}</p>
+            <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+              <span>⏱️ ${this.translations.estimatedTime || '예상 시간'}: ${unit.estimatedHours}${this.translations.hours || '시간'}</span>
+              <span>📊 ${this.translations.order || '순서'}: ${unit.order}번째</span>
             </div>
           </div>
         `).join('')}
@@ -96,7 +274,7 @@ class ScratchEducationApp {
 
   async loadLessons(unitId) {
     try {
-      this.showNotification('레슨을 불러오는 중...', 'info');
+      this.showNotification(this.translations.loadingLessons || '레슨을 불러오는 중...', 'info');
       
       const response = await fetch(`/api/units/${unitId}/lessons`);
       const data = await response.json();
@@ -106,7 +284,7 @@ class ScratchEducationApp {
       }
     } catch (error) {
       console.error('레슨 로드 실패:', error);
-      this.showNotification('레슨을 불러오는데 실패했습니다.', 'error');
+      this.showNotification(this.translations.error || '오류가 발생했습니다', 'error');
     }
   }
 
@@ -392,7 +570,7 @@ class ScratchEducationApp {
       });
 
       if (response.ok) {
-        this.showNotification('레슨을 완료했습니다! 🎉', 'success');
+        this.showNotification(this.translations.lessonCompleted || '레슨을 완료했습니다! 🎉', 'success');
         
         const modal = document.querySelector('.lesson-modal');
         if (modal) {
@@ -401,7 +579,7 @@ class ScratchEducationApp {
       }
     } catch (error) {
       console.error('레슨 완료 처리 실패:', error);
-      this.showNotification('완료 처리 중 오류가 발생했습니다.', 'error');
+      this.showNotification(this.translations.error || '오류가 발생했습니다', 'error');
     }
   }
 
@@ -463,23 +641,24 @@ class ScratchEducationApp {
     
     modalContent.innerHTML = `
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">🚀 학습을 시작해보세요!</h2>
-        <p class="text-gray-600 mb-6">간단한 정보를 입력하고 무료로 코딩을 배워보세요</p>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">${this.translations.registrationTitle || '🚀 학습을 시작해보세요!'}</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">${this.translations.registrationSubtitle || '간단한 정보를 입력하고 무료로 코딩을 배워보세요'}</p>
         
         <form id="registration-form" class="space-y-4">
           <div>
-            <input type="text" name="name" placeholder="이름을 입력하세요" class="w-full p-3 border rounded-lg" required>
+            <input type="text" name="name" placeholder="${this.translations.nameInput || '이름을 입력하세요'}" 
+                   class="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
           </div>
           <div>
-            <select name="grade" class="w-full p-3 border rounded-lg" required>
-              <option value="">학년을 선택하세요</option>
-              <option value="grade-1">중학교 1학년</option>
-              <option value="grade-2">중학교 2학년</option>
-              <option value="grade-3">중학교 3학년</option>
+            <select name="grade" class="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+              <option value="">${this.translations.selectGrade || '학년을 선택하세요'}</option>
+              <option value="grade-1">${this.translations.grade1 || '중학교 1학년'}</option>
+              <option value="grade-2">${this.translations.grade2 || '중학교 2학년'}</option>
+              <option value="grade-3">${this.translations.grade3 || '중학교 3학년'}</option>
             </select>
           </div>
           <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors">
-            무료 체험 시작하기
+            ${this.translations.registerButton || '무료 체험 시작하기'}
           </button>
         </form>
       </div>
@@ -502,7 +681,7 @@ class ScratchEducationApp {
       localStorage.setItem('scratchUser', JSON.stringify(this.currentUser));
       
       this.closeModal(modal);
-      this.showNotification('환영합니다! 학습을 시작해보세요 🎉', 'success');
+      this.showNotification(this.translations.welcome || '환영합니다! 학습을 시작해보세요 🎉', 'success');
       this.startLearning('grade-1');
     });
   }

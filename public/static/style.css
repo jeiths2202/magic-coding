@@ -4,6 +4,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* 다크모드 지원 */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
 /* 카드 호버 효과 */
 .card-hover {
   transition: all 0.3s ease;
@@ -101,6 +111,55 @@ html {
   }
 }
 
+/* 설정 모달 스타일 */
+.settings-modal .modal-content {
+  max-width: 400px;
+}
+
+.language-option, .theme-option {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.language-option:hover, .theme-option:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .language-option:hover, .dark .theme-option:hover {
+  background-color: #374151;
+}
+
+.language-option.active, .theme-option.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.dark .language-option.active, .dark .theme-option.active {
+  border-color: #60a5fa;
+  background-color: #1e3a8a;
+}
+
+.language-flag {
+  font-size: 1.5rem;
+  margin-right: 12px;
+}
+
+.theme-icon {
+  font-size: 1.2rem;
+  margin-right: 12px;
+  width: 20px;
+}
+
+/* 다크모드 전환 애니메이션 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 /* 모바일 최적화 */
 @media (max-width: 768px) {
   .container {
@@ -110,5 +169,10 @@ html {
   
   .text-responsive {
     font-size: 1.5rem;
+  }
+  
+  .settings-modal .modal-content {
+    max-width: 90%;
+    margin: 1rem;
   }
 }
