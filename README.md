@@ -8,7 +8,7 @@
 ## 🌐 URLs
 - **라이브 데모**: https://3000-i1a27w8p1r6smdymmfh7q-6532622b.e2b.dev
 - **API 엔드포인트**: https://3000-i1a27w8p1r6smdymmfh7q-6532622b.e2b.dev/api
-- **GitHub**: (준비 중)
+- **GitHub**: https://github.com/jeiths2202/magic-coding
 
 ## 📚 데이터 아키텍처
 
