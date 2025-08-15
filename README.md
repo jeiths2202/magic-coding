@@ -1,21 +1,142 @@
-```txt
+# 🚀 스크래치 코딩 교실
+
+## 프로젝트 개요
+- **이름**: 스크래치 코딩 교실 (Scratch Coding Education)
+- **목표**: 중등학교 학생들을 위한 체계적인 스크래치 프로그래밍 교육 플랫폼
+- **특징**: 단계별 난이도 조절, 모바일 최적화, 무료/프리미엄 과정 구분
+
+## 🌐 URLs
+- **라이브 데모**: https://3000-i1a27w8p1r6smdymmfh7q-6532622b.e2b.dev
+- **API 엔드포인트**: https://3000-i1a27w8p1r6smdymmfh7q-6532622b.e2b.dev/api
+- **GitHub**: (준비 중)
+
+## 📚 데이터 아키텍처
+
+### 교육 구조
+```
+중학교 1학년 (기초)          중학교 2학년 (중급)          중학교 3학년 (고급)
+├── 스크래치 시작하기        ├── 변수와 연산              ├── 알고리즘과 효율성
+├── 움직이는 캐릭터         ├── 게임 만들기 [프리미엄]    ├── 인공지능 기초 [프리미엄]
+└── 반복과 조건 [프리미엄]
+```
+
+### 데이터 모델
+- **Grade**: 학년 정보 (1-3학년)
+- **Unit**: 단원 정보 (무료/프리미엄 구분)
+- **Lesson**: 개별 레슨 (이론/실습/퀴즈/프로젝트)
+- **UserProgress**: 학습 진도 관리
+
+### 스토리지 서비스
+- **메모리 기반**: 현재 구현 (개발/데모용)
+- **향후 계획**: Cloudflare D1 데이터베이스 연동
+
+## 👨‍🎓 사용자 가이드
+
+### 1. 학습 시작하기
+1. 메인 페이지에서 원하는 학년 선택
+2. "학습 시작하기" 버튼 클릭
+3. 단원 목록에서 원하는 단원 선택
+4. 레슨 목록에서 순서대로 학습 진행
+
+### 2. 학습 형태
+- **📖 이론**: 개념 설명과 예시 코드
+- **🛠️ 실습**: 스크래치 편집기에서 직접 코딩
+- **📝 퀴즈**: 객관식, 참/거짓 문제
+- **🎨 프로젝트**: 창의적인 종합 과제
+
+### 3. 난이도 체계
+- **🌱 초급**: 기본 개념과 간단한 블록 사용
+- **🌿 중급**: 논리 구조와 복합 기능
+- **🌳 고급**: 알고리즘과 실생활 문제 해결
+
+### 4. 프리미엄 기능
+- 고급 단원부터 프리미엄 과정 (유료)
+- 심화 프로젝트와 개인 맞춤 지도
+- 진도 상세 분석 및 피드백
+
+## 🚀 개발 및 배포
+
+### API 엔드포인트
+```bash
+# 학년 정보 조회
+GET /api/grades
+
+# 특정 학년의 단원 목록
+GET /api/grades/{gradeId}/units
+
+# 특정 단원의 레슨 목록
+GET /api/units/{unitId}/lessons
+
+# 특정 레슨 상세 정보
+GET /api/lessons/{lessonId}
+
+# 학습 진도 저장
+POST /api/progress
+
+# 프리미엄 상태 확인 (예정)
+GET /api/user/{userId}/premium
+```
+
+### 로컬 개발환경
+```bash
+# 의존성 설치
 npm install
-npm run dev
+
+# 개발 서버 시작
+npm run build
+pm2 start ecosystem.config.cjs
+
+# 테스트
+curl http://localhost:3000
 ```
 
-```txt
-npm run deploy
-```
+## 🛠️ 기술 스택
+- **Backend**: Hono + TypeScript
+- **Frontend**: Vanilla JavaScript + TailwindCSS
+- **Runtime**: Cloudflare Workers/Pages  
+- **Styling**: TailwindCSS + Custom CSS
+- **Process Manager**: PM2 (개발환경)
+- **Build Tool**: Vite
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+## 📱 모바일 최적화
+- PWA 지원 (Progressive Web App)
+- 반응형 디자인 (스마트폰, 태블릿)
+- 터치 친화적 인터페이스
+- 한국어 완전 지원
 
-```txt
-npm run cf-typegen
-```
+## 🎯 향후 개발 계획
+1. **Cloudflare D1 데이터베이스** 연동으로 실제 데이터 저장
+2. **사용자 인증 시스템** (이메일/소셜 로그인)
+3. **결제 시스템** 연동 (프리미엄 과정)
+4. **실시간 코딩 에디터** 내장
+5. **교사용 대시보드** 개발
+6. **학습 분석 리포트** 기능
+7. **커뮤니티 기능** (작품 공유, 댓글)
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
+## 🔧 개발 상태
+- **플랫폼**: Cloudflare Pages
+- **상태**: ✅ 활성 (데모 버전)
+- **기술 스택**: Hono + TypeScript + TailwindCSS
+- **마지막 업데이트**: 2025-08-15
 
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-```
+## 📊 현재 구현된 기능
+✅ 중학교 1-3학년 체계적 커리큘럼  
+✅ 단계별 난이도 조절 시스템  
+✅ 무료/프리미엄 과정 구분  
+✅ 모바일 최적화 반응형 UI  
+✅ 이론, 실습, 퀴즈 학습 형태  
+✅ 사용자 진도 관리 시스템  
+✅ REST API 백엔드  
+✅ 인터랙티브 학습 인터페이스  
+
+## 📋 미구현 기능
+⏳ Cloudflare D1 데이터베이스 연동  
+⏳ 사용자 회원가입/로그인 시스템  
+⏳ 결제 시스템 (프리미엄 전환)  
+⏳ 실시간 코딩 에디터  
+⏳ 학습 분석 및 리포트  
+
+---
+
+**개발자**: jeiths (System Engineer, 22년차)  
+**개발 철학**: 레거시 교육 시스템의 디지털 트랜스포메이션을 통한 혁신적 학습 경험 제공
